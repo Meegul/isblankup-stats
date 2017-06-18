@@ -43,6 +43,13 @@ function incrementSite(site) {
 		});
 }
 
+function createNewSite(site) {
+	query(`INSERT INTO stats (site, hits) VALUES (($1), 1)`, [`${site}`])
+		.catch((error) => {
+			console.log(error);
+		})
+}
+
 if (cluster.isMaster) {
 	//For the process starting the cluster
 	console.log(`Master ${process.pid} is running`);
@@ -91,12 +98,20 @@ if (cluster.isMaster) {
 			res.end();
 			return;
 		}
-		if (site) {
-			console.log(`${site} hit at ${new Date().toISOString()}`);
-			incrementSite(site);
-			res.sendStatus(200);
-			res.end();
-		}
+		console.log(`${site} hit at ${new Date().toISOString()}`);
+		//Update if site exists in table, create new otherwise
+		query('SELECT hits FROM stats WHERE site = ($1)', [`${req.params.site}`])
+			.then((result) => {
+				if (result.rowCount > 0) {
+					incrementSite(site);
+				} else {
+					createNewSite(site);
+				}
+				res.sendStatus(200);
+			})
+			.catch((error) => {
+				res.send(error);
+			});
 	})
 
 	console.log(`worker ${process.pid} started!`);
