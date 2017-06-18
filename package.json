@@ -14,6 +14,11 @@
   "author": "Meegul",
   "license": "GPL-3.0",
   "dependencies": {
-    "express": "^4.15.3"
+    "body-parser": "^1.17.2",
+    "dotenv": "^4.0.0",
+    "express": "^4.15.3",
+    "pg": "^6.2.4",
+    "pg-native": "^1.10.1",
+    "url": "^0.11.0"
   }
 }

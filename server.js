@@ -1,8 +1,50 @@
 const express = require('express');
 const app = express();
+const url = require('url')
 const port = process.env.PORT || 3001;
 const cluster = require('cluster');
+const pg = require('pg');
+const bodyParser = require('body-parser')
+app.use( bodyParser.json() );       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+  extended: true
+})); 
+require('dotenv').config();
 const numCPUS = require('os').cpus().length;
+const authToken = process.env.AUTH_TOKEN;
+
+const params = url.parse(process.env.DATABASE_URL);
+const auth = params.auth.split(':');
+
+const config = {
+  user: auth[0],
+  password: auth[1],
+  host: params.hostname,
+  port: params.port,
+  database: params.pathname.split('/')[1],
+  ssl: true
+};
+const pool = new pg.Pool(config);
+pool.on('error', function (err, client) {
+	console.log('idle client error', err.message, err.stack);
+});
+function query(text, values, callback) {
+	return pool.query(text, values, callback);
+};
+
+function authenticated(key) {
+	const authed = key == authToken;
+	if (!authed)
+		console.log(`failed to authenticate post. Provided key: ${key}`);
+	return authed;
+}
+
+function incrementSite(site) {
+	query(`UPDATE stats SET hits = hits + 1 WHERE site = '${site}'`)
+		.catch((error) => {
+			console.log(error);
+		});
+}
 
 if (cluster.isMaster) {
 	//For the process starting the cluster
@@ -27,6 +69,36 @@ if (cluster.isMaster) {
 	app.get('/', (req, res) => {
 		res.sendFile('public/index.html', { root: './' });
 	});
+
+	app.get('/site/:site', (req, res) => {
+		if (!req.params.site) {
+			res.send('no thx');
+		}
+
+		query(`SELECT hits FROM stats WHERE site = '${req.params.site}'`)
+			.then((result) => {
+				if (result.rowCount > 0) {
+					res.send(`${req.params.site} : ${result.rows[0].hits}`);
+				} else res.send(`${req.params.site} : 0`);
+			})
+			.catch((error) => {
+				res.send(error);
+			});
+	})
+
+	app.post('/api/:site/inc', (req, res) => {
+		const site = req.params.site;
+		const auth = req.body.auth;
+		if (!authenticated(auth)) {
+			res.sendStatus(401);
+			return;
+		}
+		if (site) {
+			console.log(`${site} hit at ${new Date().toISOString()}`);
+			incrementSite(site);
+			res.sendStatus(200);
+		}
+	})
 
 	console.log(`worker ${process.pid} started!`);
 }
