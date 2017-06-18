@@ -6,9 +6,6 @@ const cluster = require('cluster');
 const pg = require('pg');
 const bodyParser = require('body-parser')
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
-app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
-  extended: true
-})); 
 require('dotenv').config();
 const numCPUS = require('os').cpus().length;
 const authToken = process.env.AUTH_TOKEN;
@@ -40,7 +37,7 @@ function authenticated(key) {
 }
 
 function incrementSite(site) {
-	query(`UPDATE stats SET hits = hits + 1 WHERE site = '${site}'`)
+	query(`UPDATE stats SET hits = hits + 1 WHERE site = ($1)`, [`${site}`])
 		.catch((error) => {
 			console.log(error);
 		});
@@ -75,7 +72,7 @@ if (cluster.isMaster) {
 			res.send('no thx');
 		}
 
-		query(`SELECT hits FROM stats WHERE site = '${req.params.site}'`)
+		query('SELECT hits FROM stats WHERE site = ($1)', [`${req.params.site}`])
 			.then((result) => {
 				if (result.rowCount > 0) {
 					res.send(`${req.params.site} : ${result.rows[0].hits}`);
@@ -91,12 +88,14 @@ if (cluster.isMaster) {
 		const auth = req.body.auth;
 		if (!authenticated(auth)) {
 			res.sendStatus(401);
+			res.end();
 			return;
 		}
 		if (site) {
 			console.log(`${site} hit at ${new Date().toISOString()}`);
 			incrementSite(site);
 			res.sendStatus(200);
+			res.end();
 		}
 	})
 
