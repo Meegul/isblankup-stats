@@ -51,7 +51,7 @@ function createNewSite(site) {
 }
 
 function addNewHit(site, code) {
-	query(`INSERT INTO hits (site, code, time) VALUES (($1), ($2), to_timestamp(($3))`, [`${site}`, code, new Date().getTime()])
+	query(`INSERT INTO hits (site, code, time) VALUES (($1), ($2), to_timestamp(($3)))`, [`${site}`, code, new Date().getTime()/1000])
 		.catch((error) => {
 			console.log(error);
 		});
