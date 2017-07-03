@@ -1,0 +1,14 @@
+<head>
+    <link href="css/stats.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width" />
+</head>
+<body>
+    <div class="wrapper" id="app">
+        <stats-header :header-items="headerList"></stats-header>
+        <stats-body :body-site="siteInfo"></stats-body>
+        <stats-footer></stats-footer>
+    </div>
+    <script src="https://unpkg.com/vue"></script>
+    <script src="js/chart.min.js"></script>
+    <script src="js/stats.js"></script>
+</body>
