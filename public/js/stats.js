@@ -43,29 +43,22 @@ Vue.component('stats-graph', {
     mounted: function() {
         const ctx = document.getElementById('graph').getContext('2d');
         var myChart = new Chart(ctx, {
-            type: 'bar',
+            type: 'line',
             data: {
-                labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
+                labels: [0,1,2,3,4,5,6,7,8,9],
                 datasets: [{
-                    label: '# of Votes',
-                    data: [12, 19, 3, 5, 2, 3],
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.2)',
-                        'rgba(54, 162, 235, 0.2)',
-                        'rgba(255, 206, 86, 0.2)',
-                        'rgba(75, 192, 192, 0.2)',
-                        'rgba(153, 102, 255, 0.2)',
-                        'rgba(255, 159, 64, 0.2)'
-                    ],
-                    borderColor: [
-                        'rgba(255,99,132,1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 1
+                    label: 'Uptime',
+                    data: [0,1,0,1,0],
+                    backgroundColor: 'rgba(0,255,0,1)',
+                    borderWidth: 1,
+                    fill: 'start',
+                },
+                {
+                    label: 'Downtime',
+                    data: [0,1,0,1,0],
+                    backgroundColor: 'rgba(255,0,0,1)',
+                    borderWidth: 1,
+                    fill: 'end'
                 }]},
             options: {
                 scales: {
@@ -80,15 +73,15 @@ Vue.component('stats-graph', {
     }
 });
 const statsBodyTemplate =
-`<div>
+`<div class="container">
     <div class="siteUrl">
         <input type="text" class="siteInput" placeholder="google.com" v-model="site.url">
     </div>
-    <div class="body-wrapper">
-        <div class="graph">
+    <div class="row body-wrapper">
+        <div class="col-xs-12 col-md-6 graph">
             <stats-graph :siteData="site"/>
         </div>
-        <div class="siteInfo">
+        <div class="col-xs-12 col-md-6 siteInfo">
             <ul>
                 <li v-for="point in site.data">
                     <p>{{ point.text }}</p>
