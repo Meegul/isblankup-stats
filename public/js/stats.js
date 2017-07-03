@@ -41,11 +41,8 @@ Vue.component('stats-graph', {
         };
     },
     watch: {
-        graphData: {
-            handler: function(newData) {
-                this.graphData = newData;
-                this.startChart();
-            }
+        graphData: function() {
+            this.startChart();
         }
     },
     methods: {
@@ -98,7 +95,7 @@ const statsBodyTemplate =
     </div>
     <div class="row body-wrapper">
         <div class="col-xs-12 col-md-6 graph">
-            <stats-graph :siteData="site"/>
+            <stats-graph :initialGraphData="site"/>
         </div>
         <div class="col-xs-12 col-md-6 siteInfo">
             <p>
@@ -112,10 +109,7 @@ Vue.component('stats-body', {
     props: ['initialSiteInfo'],
     data: function() {
         return {
-            site: {
-                url: this.initialSiteInfo.url,
-                data: this.initialSiteInfo.data
-            }
+            site: this.initialSiteInfo
         };
     },
     methods: {
@@ -126,13 +120,11 @@ Vue.component('stats-body', {
             const req = new XMLHttpRequest();
             req.onreadystatechange = function() {
                 if (this.readyState === 4 && this.status === 200) {
-                    console.log(req.responseText);
-                    console.log(self.site);
-                    Vue.set(self, 'site', {
+                    self.site = {
                         data: JSON.parse(req.responseText),
                         url: target
-                    });
-                    console.log(self.site);
+                    };
+                    self.$children[0].graphData = self.site;
                 }
             };
             req.open('GET', url, true);
