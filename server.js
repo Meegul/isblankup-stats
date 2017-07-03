@@ -47,7 +47,14 @@ function createNewSite(site) {
 	query(`INSERT INTO stats (site, hits) VALUES (($1), 1)`, [`${site}`])
 		.catch((error) => {
 			console.log(error);
-		})
+		});
+}
+
+function addNewHit(site, code) {
+	query(`INSERT INTO hits (site, code) VALUES (($1), ($2))`, [`${site}`, code])
+		.catch((error) => {
+			console.log(error);
+		});
 }
 
 if (cluster.isMaster) {
@@ -115,6 +122,7 @@ if (cluster.isMaster) {
 	app.post('/api/:site/inc', (req, res) => {
 		const site = req.params.site;
 		const auth = req.body.auth;
+		const code = req.body.code;
 		if (!authenticated(auth)) {
 			res.sendStatus(401);
 			res.end();
@@ -129,6 +137,7 @@ if (cluster.isMaster) {
 				} else {
 					createNewSite(site);
 				}
+				addNewHit(site, code)
 				res.sendStatus(200);
 			})
 			.catch((error) => {
