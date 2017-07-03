@@ -90,6 +90,28 @@ if (cluster.isMaster) {
 			});
 	})
 
+	app.get('/site/:site/history', (req, res) => {
+		if (!req.params.site) {
+			res.sendStatus(404);
+		}
+
+		query('SELECT "code", "time" FROM hits WHERE site = ($1)', [`${req.params.site}`])
+			.then((result) => {
+				const responseObj = result.rows.map((row) => {
+					return {
+						code: row.code,
+						up: row.code === 200,
+						time: row.time
+					};
+				});
+				res.send(JSON.stringify(responseObj));
+			})
+			.catch((error) => {
+				console.log(error);
+				res.sendStatus(500);
+			})
+	});
+
 	app.post('/api/:site/inc', (req, res) => {
 		const site = req.params.site;
 		const auth = req.body.auth;
