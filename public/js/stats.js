@@ -42,7 +42,10 @@ Vue.component('stats-graph', {
     },
     watch: {
         graphData: function() {
-            this.startChart();
+            this.chart.data.labels = this.graphData.data.map(el => el.time);
+            this.chart.data.datasets[0].data = this.graphData.data.map(el => el.up ? 1 : 0);
+            this.chart.data.datasets[1].data = this.graphData.data.map(el => el.up ? 1 : 0);
+            this.chart.update();
         }
     },
     methods: {
@@ -70,7 +73,12 @@ Vue.component('stats-graph', {
                 options: {
                     scales: {
                         yAxes: [{
-                            display: false
+                            display: false,
+                            ticks: {
+                                steps: 1,
+                                min: 0,
+                                max: 1
+                            }
                         }],
                         xAxes: [{
                             ticks: {
