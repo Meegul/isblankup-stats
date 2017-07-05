@@ -149,7 +149,7 @@ Vue.component('stats-footer', {
     template: statsFooterTemplate,
 });
 
-const app = new Vue({
+const vm = new Vue({
     el: '#app',
     data: {
         headerList: [
