@@ -31,6 +31,32 @@ Vue.component('stats-header', {
     }
 });
 
+const statsTextTemplate = 
+`<div>
+    <p>Info about {{ site.url }}</p>
+    <p>Average uptime: {{ averageUptime }}%</p>
+    <p>Last checked: {{ mostRecentTime }}</p>
+</div>`
+Vue.component('stats-text', {
+    template: statsTextTemplate,
+    props: ['initialSiteInfo'],
+    data: function() {
+        return {
+            site: this.initialSiteInfo
+        };
+    },
+    computed: {
+        averageUptime: function() {
+            return (""+this.site.data.reduce((sum, on) => sum + (on.up ? 1 : 0), 0) * 100 / this.site.data.length).substring(0,5);
+        },
+        mostRecentTime: function() {
+            if (!this.site || this.site.data.length === 0 || typeof this.site.data[0].time === 'number')
+                return "never";
+            return this.site.data[this.site.data.length - 1].time.format("D MMMM h:m a");
+        }
+    }
+});
+
 const statsGraphTemplate = `<canvas id="graph" width="400" height="400">no canvas 4 u</canvas>`;
 Vue.component('stats-graph', {
     template: statsGraphTemplate,
@@ -54,7 +80,7 @@ Vue.component('stats-graph', {
             this.chart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: this.graphData.data.map(el => el.time),
+                    labels: this.graphData.data.map(el => el.time.format()),
                     datasets: [{
                         label: 'Uptime',
                         data: this.graphData.data.map(el => el.up ? 1 : 0),
@@ -87,7 +113,8 @@ Vue.component('stats-graph', {
                                 }
                             }
                         }]
-                    }
+                    },
+                    maintainAspectRatio: true
                 }
             });
         }
@@ -101,14 +128,12 @@ const statsBodyTemplate =
     <div class="siteUrl">
         <input type="text" class="siteInput" placeholder="google.com" v-model="site.url" @keyup.enter="getNewData()">
     </div>
-    <div class="row body-wrapper">
-        <div class="col-xs-12 col-md-6 graph">
+    <div class="row content-wrapper">
+        <div class="col-xs-12 col-md-6">
             <stats-graph :initialGraphData="site"/>
         </div>
-        <div class="col-xs-12 col-md-6 siteInfo">
-            <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam accumsan odio tellus, id feugiat leo egestas vel. Maecenas porttitor rutrum nisl ac commodo. Vivamus tristique dui ac libero euismod, ac laoreet sapien maximus. Morbi nec ante sed ligula blandit mattis in ut odio. Ut sapien augue, luctus ac ante eget, pharetra tristique erat. Nunc at orci nec nisl tempus fermentum eu eget metus. Aliquam laoreet nunc in placerat porttitor. Sed sit amet tincidunt est. Etiam aliquam consectetur eleifend. Cras risus quam, eleifend ultricies leo eget, imperdiet maximus arcu.
-            </p>
+        <div class="col-xs-12 col-md-6 ">
+            <stats-text class="siteInfo" :initialSiteInfo="site"></stats-text>
         </div>
     </div>
 </div>`;
@@ -132,18 +157,26 @@ Vue.component('stats-body', {
                         data: JSON.parse(req.responseText),
                         url: target
                     };
+                    self.site.data = self.site.data.map((row) => {
+                        row.time = moment(row.time.substring(0, 19) + "+05:00");
+                        return row;
+                    });
                     self.$children[0].graphData = self.site;
+                    self.$children[1].site = self.site;
                 }
             };
             req.open('GET', url, true);
             req.send();
         }
+    },
+    mounted: function() {
+        this.getNewData();
     }
 });
 
 const statsFooterTemplate =
-`<div class="footer">
-    <h3>Footer</h3>
+`<div class="stats-footer">
+    <p>This data is collected anonymously from <a href="http://isblankup.com" target="__blank">isblankup.com</a></p>
 </div>`;
 Vue.component('stats-footer', {
     template: statsFooterTemplate,
@@ -153,18 +186,14 @@ const vm = new Vue({
     el: '#app',
     data: {
         headerList: [
-            { path: '/kek1', text: 'kek1'},
-            { path: '/kek2', text: 'kek2'},
-            { path: '/kek3', text: 'kek3'}
+            { path: 'http://isblankup.com', text: 'isblankup'}
         ],
         siteInfo: {
             url: 'google.com',
             data: [
-                { code: 404, up: false, time: 1499106002921},
-                { code: 200, up: true, time: 1499106009326},
-                { code: 200, up: true, time: 1499113765891},
-                { code: 404, up: false, time: 1499113789964},
-                { code: 200, up: true, time: 1499113795112},
+                { code: 404, up: false, time: moment(1) },
+                { code: 404, up: false, time: moment(2) },
+                { code: 404, up: false, time: moment(3) }
             ]
         }
     }
