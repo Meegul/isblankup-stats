@@ -57,7 +57,7 @@ function addNewHit(site, code) {
 		});
 }
 
-if (cluster.isMaster) {
+if (cluster.isMaster && process.env.ENVIRONMENT === 'production') {
 	//For the process starting the cluster
 	console.log(`Master ${process.pid} is running`);
 
@@ -78,7 +78,7 @@ if (cluster.isMaster) {
 	app.use(express.static('public'));
 
 	app.get('/', (req, res) => {
-		res.sendFile('public/index.html', { root: './' });
+		res.sendFile('public/stats.html', { root: './' });
 	});
 
 	app.get('/site/:site', (req, res) => {

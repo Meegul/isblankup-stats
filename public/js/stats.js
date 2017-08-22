@@ -34,7 +34,7 @@ Vue.component('stats-header', {
 const statsTextTemplate = 
 `<div>
     <p>Info about {{ site.url }}</p>
-    <p>Average uptime: {{ averageUptime }}%</p>
+    <p>Average uptime: {{ averageUptime }}</p>
     <p>Last checked: {{ mostRecentTime }}</p>
 </div>`
 Vue.component('stats-text', {
@@ -47,12 +47,14 @@ Vue.component('stats-text', {
     },
     computed: {
         averageUptime: function() {
-            return (""+this.site.data.reduce((sum, on) => sum + (on.up ? 1 : 0), 0) * 100 / this.site.data.length).substring(0,5);
+            if (this.site.data.length == 0)
+                return "";
+            return `${(""+this.site.data.reduce((sum, on) => sum + (on.up ? 1 : 0), 0) * 100 / this.site.data.length).substring(0,5)}%`;
         },
         mostRecentTime: function() {
-            if (!this.site || this.site.data.length === 0 || typeof this.site.data[0].time === 'number')
+            if (!this.site || this.site.data.length === 0 || typeof this.site.data[0].time === 'number' || isNaN(this.site.data[0].time))
                 return "never";
-            return this.site.data[this.site.data.length - 1].time.format("D MMMM h:m a");
+            return this.site.data[this.site.data.length - 1].time.local().format('M/D/YY h:mm a');
         }
     }
 });
@@ -80,7 +82,7 @@ Vue.component('stats-graph', {
             this.chart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: this.graphData.data.map(el => el.time.format()),
+                    labels: this.graphData.data.map(el => el.time.format('M/D/YY h:mm a')),
                     datasets: [{
                         label: 'Uptime',
                         data: this.graphData.data.map(el => el.up ? 1 : 0),
@@ -109,7 +111,7 @@ Vue.component('stats-graph', {
                         xAxes: [{
                             ticks: {
                                 callback: function(value, index, values) {
-                                    return new Date(value).toLocaleTimeString();
+                                    return moment.utc(value).local().format('M/D/YY h:mm a');
                                 }
                             }
                         }]
@@ -153,14 +155,14 @@ Vue.component('stats-body', {
             const req = new XMLHttpRequest();
             req.onreadystatechange = function() {
                 if (this.readyState === 4 && this.status === 200) {
-                    self.site = {
-                        data: JSON.parse(req.responseText),
-                        url: target
-                    };
-                    self.site.data = self.site.data.map((row) => {
-                        row.time = moment(row.time.substring(0, 19) + "+05:00");
+                    const data = JSON.parse(req.responseText).map((row) => {
+                        row.time = moment.parseZone(row.time);
                         return row;
                     });
+                    self.site = {
+                        data: data,
+                        url: target
+                    };
                     self.$children[0].graphData = self.site;
                     self.$children[1].site = self.site;
                 }
