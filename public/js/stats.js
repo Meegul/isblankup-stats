@@ -74,7 +74,7 @@ Vue.component('stats-graph', {
             this.chart.data.datasets[0].data = this.graphData.data.map(el => el.up ? 1 : 0);
             this.chart.data.datasets[1].data = this.graphData.data.map(el => el.up ? 1 : 0);
             this.chart.update();
-        }
+        },
     },
     methods: {
         startChart: function() {
@@ -112,15 +112,15 @@ Vue.component('stats-graph', {
                             ticks: {
                                 steps: 1,
                                 min: 0,
-                                max: 1
-                            }
+                                max: 1,
+                            },
                         }],
                         xAxes: [{
                             ticks: {
                                 callback: function(value, index, values) {
                                     return moment.utc(value).local().format('M/D/YY h:mm a');
-                                }
-                            }
+                                },
+                            },
                         }]
                     },
                     maintainAspectRatio: true
