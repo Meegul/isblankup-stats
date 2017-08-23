@@ -33,7 +33,7 @@ Vue.component('stats-header', {
 
 const statsTextTemplate = 
 `<div>
-    <p>Info about {{ site.url }}</p>
+    <h3>Info about {{ site.url }}</h3>
     <p>Average uptime: {{ averageUptime }}</p>
     <p>Last checked: {{ mostRecentTime }}</p>
 </div>`
@@ -148,7 +148,7 @@ Vue.component('stats-graph', {
 const statsBodyTemplate =
 `<div class="container">
     <div class="siteUrl">
-        <input type="text" class="siteInput" placeholder="google.com" v-model="site.url" @keyup.enter="getNewData()">
+        <input type="text" class="siteInput" placeholder="google.com" v-model="site.url" @keyup="inputHandler()">
     </div>
     <div class="row content-wrapper">
         <div class="col-xs-12 col-md-6">
@@ -164,11 +164,20 @@ Vue.component('stats-body', {
     props: ['initialSiteInfo'],
     data: function() {
         return {
+            nextReqTime: new Date().getTime(),
             site: this.initialSiteInfo
         };
     },
     methods: {
+        inputHandler: function() {
+            const self = this;
+            this.nextReqTime = new Date().getTime() + 250;
+            setTimeout(function() { self.getNewData(); }, 250);
+        },
         getNewData: function() {
+            if (this.nextReqTime > new Date().getTime()) {
+                return;
+            }
             const self = this;
             const target = this.site.url;
             const url = `/site/${encodeURI(target)}/history`;
@@ -181,7 +190,7 @@ Vue.component('stats-body', {
                     });
                     self.site = {
                         data: data,
-                        url: target
+                        url: self.site.url,
                     };
                     self.$children[0].graphData = self.site;
                     self.$children[1].site = self.site;
@@ -213,9 +222,6 @@ const vm = new Vue({
         siteInfo: {
             url: 'google.com',
             data: [
-                { code: 404, up: false, time: moment(1) },
-                { code: 404, up: false, time: moment(2) },
-                { code: 404, up: false, time: moment(3) }
             ]
         }
     }
