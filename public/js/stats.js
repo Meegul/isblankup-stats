@@ -60,6 +60,8 @@ Vue.component('stats-text', {
 });
 
 const statsGraphTemplate = `<canvas id="graph" width="400" height="400">no canvas 4 u</canvas>`;
+const upColor = 'rgba(0,255,0,1)';
+const downColor = 'rgba(255,0,0,1)';
 Vue.component('stats-graph', {
     template: statsGraphTemplate,
     props: ['initialGraphData'],
@@ -72,7 +74,9 @@ Vue.component('stats-graph', {
         graphData: function() {
             this.chart.data.labels = this.graphData.data.map(el => el.time);
             this.chart.data.datasets[0].data = this.graphData.data.map(el => el.up ? 1 : 0);
+            this.chart.data.datasets[0].pointBackgroundColor = this.graphData.data.map(el => el.up ? upColor : downColor)
             this.chart.data.datasets[1].data = this.graphData.data.map(el => el.up ? 1 : 0);
+            this.chart.data.datasets[1].pointBackgroundColor = this.graphData.data.map(el => el.up ? upColor : downColor)            
             this.chart.update();
         },
     },
@@ -86,14 +90,16 @@ Vue.component('stats-graph', {
                     datasets: [{
                         label: 'Uptime',
                         data: this.graphData.data.map(el => el.up ? 1 : 0),
-                        backgroundColor: 'rgba(0,255,0,1)',
+                        pointBackgroundColor: this.graphData.data.map(el => el.up ? upColor : downColor),
+                        backgroundColor: upColor,
                         borderWidth: 0,
                         fill: 'start',
                     },
                     {
                         label: 'Downtime',
-                        data: this.graphData.data.map(el => el.up ? 1 : 0),
-                        backgroundColor: 'rgba(255,0,0,1)',
+                        data: this.graphData.data.map(el => el.up ? 1 : 0),       
+                        pointBackgroundColor: this.graphData.data.map(el => el.up ? upColor : downColor),             
+                        backgroundColor: downColor,
                         borderWidth: 0,
                         fill: 'end'
                     }]
@@ -101,6 +107,13 @@ Vue.component('stats-graph', {
                 options: {
                     tooltips: {
                         callbacks: {
+                            labelColor: (input) => {
+                                const color = input.yLabel === 1 ? upColor : downColor;
+                                return {
+                                    borderColor: color,
+                                    backgroundColor: color,
+                                };
+                            },
                             label: (input) => {
                                 return input.yLabel === 1 ? 'up' : 'down';
                             },
