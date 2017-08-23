@@ -87,18 +87,25 @@ Vue.component('stats-graph', {
                         label: 'Uptime',
                         data: this.graphData.data.map(el => el.up ? 1 : 0),
                         backgroundColor: 'rgba(0,255,0,1)',
-                        borderWidth: 1,
+                        borderWidth: 0,
                         fill: 'start',
                     },
                     {
                         label: 'Downtime',
                         data: this.graphData.data.map(el => el.up ? 1 : 0),
                         backgroundColor: 'rgba(255,0,0,1)',
-                        borderWidth: 1,
+                        borderWidth: 0,
                         fill: 'end'
                     }]
                 },
                 options: {
+                    tooltips: {
+                        callbacks: {
+                            label: (input) => {
+                                return input.yLabel === 1 ? 'up' : 'down';
+                            },
+                        },
+                    },
                     scales: {
                         yAxes: [{
                             display: false,
